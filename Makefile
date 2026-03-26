@@ -21,6 +21,7 @@ bundle: build
 		echo "⚠️  SPM bundle DB not found, copying DB manually"; \
 		cp Sources/SlickWallpaper/Resources/quoteitup.db "$(APP_BUNDLE)/Contents/Resources/"; \
 	fi
+	@cp AppIcon.icns "$(APP_BUNDLE)/Contents/Resources/"
 	@echo "✅ App bundle created: $(APP_BUNDLE)"
 
 sign: bundle

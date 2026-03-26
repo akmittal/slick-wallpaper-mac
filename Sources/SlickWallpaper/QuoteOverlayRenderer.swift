@@ -84,31 +84,51 @@ final class QuoteOverlayRenderer {
         let blockWidth = max(quoteFrame.width, authorFrame.width) + blockPadX * 2
         let blockHeight = totalTextHeight + blockPadY * 2
 
-        let blockX = centerX - blockWidth / 2
-        let blockY = (size.height - blockHeight) / 2
+        let placement = UserSettings.shared.quotePlacement
+        let marginX = size.width * 0.06
+        let marginY = size.height * 0.06
 
-        // Draw frosted-glass backdrop pill
-        drawBackdrop(
-            in: ctx,
-            rect: CGRect(x: blockX, y: blockY, width: blockWidth, height: blockHeight),
-            cornerRadius: size.width * 0.018
-        )
+        let blockX: CGFloat
+        let blockY: CGFloat
 
-        // Draw quote text (centered)
+        switch placement {
+        case .center:
+            blockX = centerX - blockWidth / 2
+            blockY = (size.height - blockHeight) / 2
+        case .bottomLeft:
+            blockX = marginX
+            blockY = marginY
+        case .topRight:
+            blockX = size.width - blockWidth - marginX
+            blockY = size.height - blockHeight - marginY
+        }
+
+        let opacity = UserSettings.shared.backdropOpacity
+        if opacity > 0.0 {
+            // Draw frosted-glass backdrop pill
+            drawBackdrop(
+                in: ctx,
+                rect: CGRect(x: blockX, y: blockY, width: blockWidth, height: blockHeight),
+                cornerRadius: size.width * 0.018,
+                opacity: opacity
+            )
+        }
+
+        // Draw quote text
         let quoteY = blockY + blockPadY + authorFrame.height + gap
         drawText(
             quoteAS,
             in: ctx,
-            origin: CGPoint(x: centerX - quoteFrame.width / 2, y: quoteY),
+            origin: CGPoint(x: blockX + blockPadX + (max(quoteFrame.width, authorFrame.width) - quoteFrame.width) / 2, y: quoteY),
             maxWidth: maxTextWidth
         )
 
-        // Draw author text (centered)
+        // Draw author text
         let authorY = blockY + blockPadY
         drawText(
             authorAS,
             in: ctx,
-            origin: CGPoint(x: centerX - authorFrame.width / 2, y: authorY),
+            origin: CGPoint(x: blockX + blockPadX + (max(quoteFrame.width, authorFrame.width) - authorFrame.width) / 2, y: authorY),
             maxWidth: maxTextWidth
         )
 
@@ -170,12 +190,12 @@ final class QuoteOverlayRenderer {
         }
     }
 
-    private func drawBackdrop(in ctx: CGContext, rect: CGRect, cornerRadius: CGFloat) {
+    private func drawBackdrop(in ctx: CGContext, rect: CGRect, cornerRadius: CGFloat, opacity: Double) {
         ctx.saveGState()
         // Dark frosted pill
         let path = CGPath(roundedRect: rect, cornerWidth: cornerRadius, cornerHeight: cornerRadius, transform: nil)
         ctx.addPath(path)
-        ctx.setFillColor(NSColor.black.withAlphaComponent(0.38).cgColor)
+        ctx.setFillColor(NSColor.black.withAlphaComponent(CGFloat(opacity)).cgColor)
         ctx.fillPath()
 
         // Subtle white border

@@ -4,15 +4,16 @@ import SQLite
 
 // MARK: - Data Models
 
-struct Quote {
-    let id: Int
+struct Quote: Codable, Identifiable, Hashable {
+    var id: String { "\(text)-\(author)" }
     let text: String
     let author: String
 }
 
 // MARK: - Update Interval
 
-enum UpdateInterval: String, CaseIterable {
+enum UpdateInterval: String, CaseIterable, Identifiable {
+    var id: String { rawValue }
     case oneHour = "1 Hour"
     case sixHours = "6 Hours"
     case daily = "Daily"
@@ -28,6 +29,21 @@ enum UpdateInterval: String, CaseIterable {
     }
 }
 
+// MARK: - App Features Enums
+
+enum QuotePlacement: String, CaseIterable, Identifiable {
+    var id: String { rawValue }
+    case center = "Center"
+    case bottomLeft = "Bottom Left"
+    case topRight = "Top Right"
+}
+
+enum MultiMonitorMode: String, CaseIterable, Identifiable {
+    var id: String { rawValue }
+    case mirrored = "Mirrored (Same Quote)"
+    case unique = "Unique (Different Quotes)"
+}
+
 // MARK: - UserSettings
 
 final class UserSettings: ObservableObject {
@@ -39,6 +55,12 @@ final class UserSettings: ObservableObject {
         static let categories = "enabledCategories"
         static let fontFamily = "fontFamily"
         static let fontSize = "fontSize"
+        static let customPalettes = "customPalettes"
+        static let backdropOpacity = "backdropOpacity"
+        static let quotePlacement = "quotePlacement"
+        static let customQuotes = "customQuotes"
+        static let multiMonitorMode = "multiMonitorMode"
+        static let syncDarkMode = "syncDarkMode"
     }
 
     @Published var interval: UpdateInterval {
@@ -55,6 +77,36 @@ final class UserSettings: ObservableObject {
 
     @Published var fontSize: CGFloat {
         didSet { defaults.set(Double(fontSize), forKey: Keys.fontSize) }
+    }
+
+    // --- V2 Customizations ---
+
+    @Published var customPalettes: [[String]] {
+        didSet { defaults.set(customPalettes, forKey: Keys.customPalettes) }
+    }
+
+    @Published var backdropOpacity: Double {
+        didSet { defaults.set(backdropOpacity, forKey: Keys.backdropOpacity) }
+    }
+
+    @Published var quotePlacement: QuotePlacement {
+        didSet { defaults.set(quotePlacement.rawValue, forKey: Keys.quotePlacement) }
+    }
+
+    @Published var customQuotes: [Quote] {
+        didSet {
+            if let data = try? JSONEncoder().encode(customQuotes) {
+                defaults.set(data, forKey: Keys.customQuotes)
+            }
+        }
+    }
+
+    @Published var multiMonitorMode: MultiMonitorMode {
+        didSet { defaults.set(multiMonitorMode.rawValue, forKey: Keys.multiMonitorMode) }
+    }
+
+    @Published var syncDarkMode: Bool {
+        didSet { defaults.set(syncDarkMode, forKey: Keys.syncDarkMode) }
     }
 
     static let allCategories: [String] = [
@@ -74,5 +126,26 @@ final class UserSettings: ObservableObject {
         self.fontFamily = defaults.string(forKey: Keys.fontFamily) ?? "Georgia"
         let savedFontSize = defaults.double(forKey: Keys.fontSize)
         self.fontSize = savedFontSize > 0 ? CGFloat(savedFontSize) : 52
+
+        // V2 Decoding
+        self.customPalettes = defaults.object(forKey: Keys.customPalettes) as? [[String]] ?? []
+        let rawOpacity = defaults.object(forKey: Keys.backdropOpacity)
+        self.backdropOpacity = rawOpacity != nil ? defaults.double(forKey: Keys.backdropOpacity) : 0.38
+
+        let rawPlacement = defaults.string(forKey: Keys.quotePlacement) ?? ""
+        self.quotePlacement = QuotePlacement(rawValue: rawPlacement) ?? .center
+
+        if let data = defaults.data(forKey: Keys.customQuotes),
+           let decoded = try? JSONDecoder().decode([Quote].self, from: data) {
+            self.customQuotes = decoded
+        } else {
+            self.customQuotes = []
+        }
+
+        let rawMonitor = defaults.string(forKey: Keys.multiMonitorMode) ?? ""
+        self.multiMonitorMode = MultiMonitorMode(rawValue: rawMonitor) ?? .mirrored
+
+        let rawSync = defaults.object(forKey: Keys.syncDarkMode)
+        self.syncDarkMode = rawSync != nil ? defaults.bool(forKey: Keys.syncDarkMode) : true
     }
 }

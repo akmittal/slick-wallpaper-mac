@@ -13,49 +13,57 @@ private struct GradientPair {
         self.end = end.cgColor
         self.accent = accent?.cgColor
     }
+
+    init(hexStrings: [String]) {
+        self.start = NSColor(hex: hexStrings[safe: 0] ?? "#000000")?.cgColor ?? NSColor.black.cgColor
+        self.end = NSColor(hex: hexStrings[safe: 1] ?? "#000000")?.cgColor ?? NSColor.black.cgColor
+        if hexStrings.count > 2 {
+            self.accent = NSColor(hex: hexStrings[2])?.cgColor
+        } else {
+            self.accent = nil
+        }
+    }
 }
 
-private let gradientPalette: [GradientPair] = [
-    // Deep ocean
-    GradientPair(NSColor(red: 0.02, green: 0.09, blue: 0.30, alpha: 1),
-                 NSColor(red: 0.06, green: 0.35, blue: 0.52, alpha: 1),
-                 NSColor(red: 0.14, green: 0.62, blue: 0.70, alpha: 1)),
-    // Midnight aurora
-    GradientPair(NSColor(red: 0.05, green: 0.05, blue: 0.18, alpha: 1),
-                 NSColor(red: 0.14, green: 0.30, blue: 0.45, alpha: 1),
-                 NSColor(red: 0.12, green: 0.72, blue: 0.58, alpha: 1)),
-    // Warm dusk
-    GradientPair(NSColor(red: 0.55, green: 0.12, blue: 0.28, alpha: 1),
-                 NSColor(red: 0.95, green: 0.48, blue: 0.26, alpha: 1),
-                 NSColor(red: 0.99, green: 0.80, blue: 0.40, alpha: 1)),
-    // Forest mist
-    GradientPair(NSColor(red: 0.04, green: 0.18, blue: 0.12, alpha: 1),
-                 NSColor(red: 0.12, green: 0.42, blue: 0.28, alpha: 1),
-                 NSColor(red: 0.45, green: 0.72, blue: 0.50, alpha: 1)),
-    // Purple haze
-    GradientPair(NSColor(red: 0.18, green: 0.05, blue: 0.30, alpha: 1),
-                 NSColor(red: 0.55, green: 0.20, blue: 0.75, alpha: 1),
-                 NSColor(red: 0.90, green: 0.55, blue: 0.95, alpha: 1)),
-    // Slate storm
-    GradientPair(NSColor(red: 0.08, green: 0.10, blue: 0.15, alpha: 1),
-                 NSColor(red: 0.22, green: 0.28, blue: 0.38, alpha: 1),
-                 NSColor(red: 0.45, green: 0.55, blue: 0.65, alpha: 1)),
-    // Rose gold
-    GradientPair(NSColor(red: 0.30, green: 0.12, blue: 0.18, alpha: 1),
-                 NSColor(red: 0.75, green: 0.40, blue: 0.45, alpha: 1),
-                 NSColor(red: 0.95, green: 0.75, blue: 0.70, alpha: 1)),
-    // Arctic blue
-    GradientPair(NSColor(red: 0.05, green: 0.15, blue: 0.28, alpha: 1),
-                 NSColor(red: 0.25, green: 0.55, blue: 0.78, alpha: 1),
-                 NSColor(red: 0.72, green: 0.88, blue: 0.96, alpha: 1)),
-    // Obsidian ember
-    GradientPair(NSColor(red: 0.06, green: 0.04, blue: 0.04, alpha: 1),
-                 NSColor(red: 0.22, green: 0.08, blue: 0.04, alpha: 1),
-                 NSColor(red: 0.82, green: 0.30, blue: 0.10, alpha: 1)),
-    // Teal dawn
-    GradientPair(NSColor(red: 0.03, green: 0.16, blue: 0.20, alpha: 1),
-                 NSColor(red: 0.10, green: 0.46, blue: 0.52, alpha: 1),
-                 NSColor(red: 0.55, green: 0.82, blue: 0.80, alpha: 1)),
+extension Array {
+    subscript(safe index: Int) -> Element? {
+        return indices.contains(index) ? self[index] : nil
+    }
+}
+
+extension NSColor {
+    convenience init?(hex: String) {
+        var hexSanitized = hex.trimmingCharacters(in: .whitespacesAndNewlines)
+        hexSanitized = hexSanitized.replacingOccurrences(of: "#", with: "")
+
+        var rgb: UInt64 = 0
+        guard Scanner(string: hexSanitized).scanHexInt64(&rgb) else { return nil }
+
+        let length = hexSanitized.count
+        guard length == 6 else { return nil }
+
+        let r = CGFloat((rgb & 0xFF0000) >> 16) / 255.0
+        let g = CGFloat((rgb & 0x00FF00) >> 8) / 255.0
+        let b = CGFloat(rgb & 0x0000FF) / 255.0
+
+        self.init(red: r, green: g, blue: b, alpha: 1.0)
+    }
+}
+
+private let darkPalette: [GradientPair] = [
+    GradientPair(NSColor(red: 0.02, green: 0.09, blue: 0.30, alpha: 1), NSColor(red: 0.06, green: 0.35, blue: 0.52, alpha: 1), NSColor(red: 0.14, green: 0.62, blue: 0.70, alpha: 1)),
+    GradientPair(NSColor(red: 0.05, green: 0.05, blue: 0.18, alpha: 1), NSColor(red: 0.14, green: 0.30, blue: 0.45, alpha: 1), NSColor(red: 0.12, green: 0.72, blue: 0.58, alpha: 1)),
+    GradientPair(NSColor(red: 0.04, green: 0.18, blue: 0.12, alpha: 1), NSColor(red: 0.12, green: 0.42, blue: 0.28, alpha: 1), NSColor(red: 0.45, green: 0.72, blue: 0.50, alpha: 1)),
+    GradientPair(NSColor(red: 0.18, green: 0.05, blue: 0.30, alpha: 1), NSColor(red: 0.55, green: 0.20, blue: 0.75, alpha: 1), NSColor(red: 0.90, green: 0.55, blue: 0.95, alpha: 1)),
+    GradientPair(NSColor(red: 0.08, green: 0.10, blue: 0.15, alpha: 1), NSColor(red: 0.22, green: 0.28, blue: 0.38, alpha: 1), NSColor(red: 0.45, green: 0.55, blue: 0.65, alpha: 1)),
+    GradientPair(NSColor(red: 0.06, green: 0.04, blue: 0.04, alpha: 1), NSColor(red: 0.22, green: 0.08, blue: 0.04, alpha: 1), NSColor(red: 0.82, green: 0.30, blue: 0.10, alpha: 1))
+]
+
+private let lightPalette: [GradientPair] = [
+    GradientPair(NSColor(red: 0.55, green: 0.12, blue: 0.28, alpha: 1), NSColor(red: 0.95, green: 0.48, blue: 0.26, alpha: 1), NSColor(red: 0.99, green: 0.80, blue: 0.40, alpha: 1)),
+    GradientPair(NSColor(red: 0.30, green: 0.12, blue: 0.18, alpha: 1), NSColor(red: 0.75, green: 0.40, blue: 0.45, alpha: 1), NSColor(red: 0.95, green: 0.75, blue: 0.70, alpha: 1)),
+    GradientPair(NSColor(red: 0.05, green: 0.15, blue: 0.28, alpha: 1), NSColor(red: 0.25, green: 0.55, blue: 0.78, alpha: 1), NSColor(red: 0.72, green: 0.88, blue: 0.96, alpha: 1)),
+    GradientPair(NSColor(red: 0.03, green: 0.16, blue: 0.20, alpha: 1), NSColor(red: 0.10, green: 0.46, blue: 0.52, alpha: 1), NSColor(red: 0.55, green: 0.82, blue: 0.80, alpha: 1))
 ]
 
 // MARK: - GradientWallpaperGenerator
@@ -79,8 +87,18 @@ final class GradientWallpaperGenerator {
             bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
         ) else { return nil }
 
-        let palette = gradientPalette
-        let pair = palette[Int.random(in: 0..<palette.count)]
+        let settings = UserSettings.shared
+        let customPalettes = settings.customPalettes
+        
+        let pair: GradientPair
+        if !customPalettes.isEmpty {
+            let hexStrings = customPalettes[Int.random(in: 0..<customPalettes.count)]
+            pair = GradientPair(hexStrings: hexStrings)
+        } else {
+            let isDarkMode = UserDefaults.standard.string(forKey: "AppleInterfaceStyle") == "Dark"
+            let palette = (settings.syncDarkMode && isDarkMode) ? darkPalette : lightPalette
+            pair = palette[Int.random(in: 0..<palette.count)]
+        }
 
         // Draw angled linear gradient
         drawAngledGradient(in: ctx, size: size, pair: pair)

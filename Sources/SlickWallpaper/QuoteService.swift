@@ -61,7 +61,13 @@ final class QuoteService {
     }
 
     func randomQuote(fromCategories categories: [String]) -> Quote? {
-        guard let db = db else { return nil }
+        let customQuotes = UserSettings.shared.customQuotes
+        // Mix in custom quotes (20% chance if available)
+        if !customQuotes.isEmpty && Int.random(in: 1...5) == 1 {
+            return customQuotes.randomElement()
+        }
+
+        guard let db = db else { return customQuotes.randomElement() }
 
         do {
             // Join quotes with quotecat filtered by selected categories
@@ -74,14 +80,13 @@ final class QuoteService {
             if let row = try db.pluck(joined) {
                 let text = (try? row.get(quotesTable[colQuote])) ?? ""
                 let author = (try? row.get(quotesTable[colAuthor])) ?? ""
-                let id = (try? row.get(quotesTable[colId])) ?? 0
                 guard !text.isEmpty else { return nil }
-                return Quote(id: id, text: text, author: author)
+                return Quote(text: text, author: author)
             }
         } catch {
             print("[QuoteService] Query error: \(error)")
         }
-        return nil
+        return customQuotes.randomElement()
     }
 
     func allCategories() -> [String] {

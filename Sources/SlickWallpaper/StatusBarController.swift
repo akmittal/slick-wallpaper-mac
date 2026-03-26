@@ -35,6 +35,12 @@ final class StatusBarController {
         nextItem.keyEquivalentModifierMask = [.command, .shift]
         menu.addItem(nextItem)
 
+        // Favorite
+        let favoriteItem = NSMenuItem(title: "💖 Favorite This Wallpaper", action: #selector(favoriteWallpaper(_:)), keyEquivalent: "f")
+        favoriteItem.target = self
+        favoriteItem.keyEquivalentModifierMask = [.command, .shift]
+        menu.addItem(favoriteItem)
+
         menu.addItem(.separator())
 
         // Settings
@@ -56,6 +62,12 @@ final class StatusBarController {
     @objc private func nextWallpaper(_ sender: Any?) {
         DispatchQueue.main.async {
             WallpaperPipeline.shared.generateAndApply()
+        }
+    }
+
+    @objc private func favoriteWallpaper(_ sender: Any?) {
+        DispatchQueue.main.async {
+            FavoritesService.shared.favoriteCurrentWallpaper()
         }
     }
 

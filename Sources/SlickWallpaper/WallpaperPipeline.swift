@@ -1,5 +1,6 @@
 import Foundation
 import Combine
+import AppKit
 
 struct Logger {
     static func log(_ msg: String) {
@@ -39,6 +40,21 @@ final class WallpaperPipeline {
 
     private func runPipeline(categories: [String], fontFamily: String, fontSize: CGFloat) {
         Logger.log("[Pipeline] runPipeline started")
+        
+        let mode = UserSettings.shared.multiMonitorMode
+        let screens = DispatchQueue.main.sync { NSScreen.screens }
+        
+        if mode == .unique && screens.count > 1 {
+            Logger.log("[Pipeline] Unique Multi-Monitor mode active. Generating for \(screens.count) screens.")
+            for screen in screens {
+                generateAndApplySingle(categories: categories, fontFamily: fontFamily, fontSize: fontSize, targetScreen: screen)
+            }
+        } else {
+            generateAndApplySingle(categories: categories, fontFamily: fontFamily, fontSize: fontSize, targetScreen: nil)
+        }
+    }
+
+    private func generateAndApplySingle(categories: [String], fontFamily: String, fontSize: CGFloat, targetScreen: NSScreen?) {
         // 1. Fetch a random quote
         guard let quote = QuoteService.shared.randomQuote(fromCategories: categories) else {
             Logger.log("[Pipeline] No quote found for categories: \(categories)")
@@ -69,7 +85,7 @@ final class WallpaperPipeline {
         DispatchQueue.main.async {
             Logger.log("[Pipeline] Applying wallpaper on main queue...")
             do {
-                try WallpaperApplier.shared.apply(imageURL: outputURL)
+                try WallpaperApplier.shared.apply(imageURL: outputURL, for: targetScreen)
                 Logger.log("[Pipeline] Wallpaper applied successfully!")
             } catch {
                 Logger.log("[Pipeline] Error applying wallpaper: \(error)")
