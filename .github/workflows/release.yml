@@ -1,0 +1,44 @@
+name: Build and Release
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-release:
+    name: Build and Release Slick Wallpaper
+    runs-on: macos-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Swift
+        uses: swift-actions/setup-swift@v2
+        with:
+          swift-version: '5.9' # Ensuring a modern Swift version is used
+
+      - name: Build and Sign the App
+        run: |
+          make sign
+
+      - name: Archive the App
+        run: |
+          # Use ditto to preserve macOS resource forks and extended attributes
+          ditto -c -k --sequesterRsrc --keepParent SlickWallpaper.app SlickWallpaper.zip
+
+      - name: Generate Version Tag
+        id: generate_tag
+        run: |
+          echo "VERSION=v1.0.${{ github.run_number }}" >> $GITHUB_ENV
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.VERSION }}
+          name: Release ${{ env.VERSION }}
+          files: SlickWallpaper.zip
+          generate_release_notes: true
