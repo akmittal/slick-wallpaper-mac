@@ -39,12 +39,7 @@ final class QuoteService {
         let dbName = "quoteitup"
         let ext = "db"
 
-        // 1. SPM Bundle.module (works in debug via swift run)
-        if let url = Bundle.module.url(forResource: dbName, withExtension: ext) {
-            return url
-        }
-
-        // 2. App bundle Resources/ (when packaged as .app)
+        // 1. App bundle Resources/ (when packaged as .app)
         if let url = Bundle.main.url(forResource: dbName, withExtension: ext) {
             return url
         }
