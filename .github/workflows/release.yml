@@ -18,7 +18,7 @@ jobs:
 
       - name: Build and Sign the App
         run: |
-          make sign
+          make sign ARCH_FLAGS="--arch arm64 --arch x86_64"
 
       - name: Archive the App
         run: |

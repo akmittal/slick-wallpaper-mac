@@ -1,10 +1,11 @@
 APP_NAME = SlickWallpaper
-BUILD_DIR = .build/arm64-apple-macosx/release
+ARCH_FLAGS ?= 
+BUILD_DIR = $(shell swift build -c release $(ARCH_FLAGS) --show-bin-path)
 APP_BUNDLE = $(APP_NAME).app
 SPM_BUNDLE = $(BUILD_DIR)/$(APP_NAME)_$(APP_NAME).bundle
 
 build:
-	swift build -c release
+	swift build -c release $(ARCH_FLAGS)
 
 bundle: build
 	@echo "📦 Creating app bundle..."
